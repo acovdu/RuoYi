@@ -2,7 +2,7 @@ package com.ruoyi.system.service;
 
 import java.util.List;
 import java.util.Set;
-import com.ruoyi.system.domain.SysRole;
+import com.ruoyi.common.core.domain.entity.SysRole;
 import com.ruoyi.system.domain.SysUserRole;
 
 /**
@@ -21,7 +21,7 @@ public interface ISysRoleService
     public List<SysRole> selectRoleList(SysRole role);
 
     /**
-     * 根据用户ID查询角色
+     * 根据用户ID查询角色列表
      * 
      * @param userId 用户ID
      * @return 权限列表
@@ -29,7 +29,7 @@ public interface ISysRoleService
     public Set<String> selectRoleKeys(Long userId);
 
     /**
-     * 根据用户ID查询角色
+     * 根据用户ID查询角色权限
      * 
      * @param userId 用户ID
      * @return 角色列表
@@ -66,7 +66,7 @@ public interface ISysRoleService
      * @return 结果
      * @throws Exception 异常
      */
-    public int deleteRoleByIds(String ids) throws Exception;
+    public int deleteRoleByIds(String ids);
 
     /**
      * 新增保存角色信息
@@ -114,6 +114,13 @@ public interface ISysRoleService
      * @param role 角色信息
      */
     public void checkRoleAllowed(SysRole role);
+
+    /**
+     * 校验角色是否有数据权限
+     * 
+     * @param roleId 角色id
+     */
+    public void checkRoleDataScope(Long roleId);
 
     /**
      * 通过角色ID查询角色使用数量
