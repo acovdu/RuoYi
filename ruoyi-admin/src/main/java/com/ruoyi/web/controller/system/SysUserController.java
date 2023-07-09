@@ -15,9 +15,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import com.ruoyi.common.annotation.Log;
-import com.ruoyi.common.constant.UserConstants;
 import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.common.core.domain.Ztree;
+import com.ruoyi.common.core.domain.entity.SysDept;
 import com.ruoyi.common.core.domain.entity.SysRole;
 import com.ruoyi.common.core.domain.entity.SysUser;
 import com.ruoyi.common.core.page.TableDataInfo;
@@ -28,6 +29,7 @@ import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.framework.shiro.service.SysPasswordService;
 import com.ruoyi.framework.shiro.util.AuthorizationUtils;
+import com.ruoyi.system.service.ISysDeptService;
 import com.ruoyi.system.service.ISysPostService;
 import com.ruoyi.system.service.ISysRoleService;
 import com.ruoyi.system.service.ISysUserService;
@@ -48,6 +50,9 @@ public class SysUserController extends BaseController
 
     @Autowired
     private ISysRoleService roleService;
+    
+    @Autowired
+    private ISysDeptService deptService;
 
     @Autowired
     private ISysPostService postService;
@@ -124,17 +129,15 @@ public class SysUserController extends BaseController
     @ResponseBody
     public AjaxResult addSave(@Validated SysUser user)
     {
-        if (UserConstants.USER_NAME_NOT_UNIQUE.equals(userService.checkLoginNameUnique(user.getLoginName())))
+        if (!userService.checkLoginNameUnique(user))
         {
             return error("新增用户'" + user.getLoginName() + "'失败，登录账号已存在");
         }
-        else if (StringUtils.isNotEmpty(user.getPhonenumber())
-                && UserConstants.USER_PHONE_NOT_UNIQUE.equals(userService.checkPhoneUnique(user)))
+        else if (StringUtils.isNotEmpty(user.getPhonenumber()) && !userService.checkPhoneUnique(user))
         {
             return error("新增用户'" + user.getLoginName() + "'失败，手机号码已存在");
         }
-        else if (StringUtils.isNotEmpty(user.getEmail())
-                && UserConstants.USER_EMAIL_NOT_UNIQUE.equals(userService.checkEmailUnique(user)))
+        else if (StringUtils.isNotEmpty(user.getEmail()) && !userService.checkEmailUnique(user))
         {
             return error("新增用户'" + user.getLoginName() + "'失败，邮箱账号已存在");
         }
@@ -170,13 +173,15 @@ public class SysUserController extends BaseController
     {
         userService.checkUserAllowed(user);
         userService.checkUserDataScope(user.getUserId());
-        if (StringUtils.isNotEmpty(user.getPhonenumber())
-                && UserConstants.USER_PHONE_NOT_UNIQUE.equals(userService.checkPhoneUnique(user)))
+        if (!userService.checkLoginNameUnique(user))
+        {
+            return error("修改用户'" + user.getLoginName() + "'失败，登录账号已存在");
+        }
+        else if (StringUtils.isNotEmpty(user.getPhonenumber()) && !userService.checkPhoneUnique(user))
         {
             return error("修改用户'" + user.getLoginName() + "'失败，手机号码已存在");
         }
-        else if (StringUtils.isNotEmpty(user.getEmail())
-                && UserConstants.USER_EMAIL_NOT_UNIQUE.equals(userService.checkEmailUnique(user)))
+        else if (StringUtils.isNotEmpty(user.getEmail()) && !userService.checkEmailUnique(user))
         {
             return error("修改用户'" + user.getLoginName() + "'失败，邮箱账号已存在");
         }
@@ -261,9 +266,9 @@ public class SysUserController extends BaseController
      */
     @PostMapping("/checkLoginNameUnique")
     @ResponseBody
-    public String checkLoginNameUnique(SysUser user)
+    public boolean checkLoginNameUnique(SysUser user)
     {
-        return userService.checkLoginNameUnique(user.getLoginName());
+        return userService.checkLoginNameUnique(user);
     }
 
     /**
@@ -271,7 +276,7 @@ public class SysUserController extends BaseController
      */
     @PostMapping("/checkPhoneUnique")
     @ResponseBody
-    public String checkPhoneUnique(SysUser user)
+    public boolean checkPhoneUnique(SysUser user)
     {
         return userService.checkPhoneUnique(user);
     }
@@ -281,7 +286,7 @@ public class SysUserController extends BaseController
      */
     @PostMapping("/checkEmailUnique")
     @ResponseBody
-    public String checkEmailUnique(SysUser user)
+    public boolean checkEmailUnique(SysUser user)
     {
         return userService.checkEmailUnique(user);
     }
@@ -298,5 +303,30 @@ public class SysUserController extends BaseController
         userService.checkUserAllowed(user);
         userService.checkUserDataScope(user.getUserId());
         return toAjax(userService.changeStatus(user));
+    }
+
+    /**
+     * 加载部门列表树
+     */
+    @RequiresPermissions("system:user:list")
+    @GetMapping("/deptTreeData")
+    @ResponseBody
+    public List<Ztree> deptTreeData()
+    {
+        List<Ztree> ztrees = deptService.selectDeptTree(new SysDept());
+        return ztrees;
+    }
+
+    /**
+     * 选择部门树
+     * 
+     * @param deptId 部门ID
+     */
+    @RequiresPermissions("system:user:list")
+    @GetMapping("/selectDeptTree/{deptId}")
+    public String selectDeptTree(@PathVariable("deptId") Long deptId, ModelMap mmap)
+    {
+        mmap.put("dept", deptService.selectDeptById(deptId));
+        return prefix + "/deptTree";
     }
 }

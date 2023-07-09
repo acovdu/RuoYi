@@ -76,9 +76,6 @@
 		                	"deptName" : function() {
 		                        return $.common.trim($("#deptName").val());
 		                    }
-		                },
-		                dataFilter: function(data, type) {
-		                	return $.validate.unique(data);
 		                }
 		            }
 				},
@@ -116,7 +113,7 @@
 			var options = {
 				title: '部门选择',
 				width: "380",
-				url: prefix + "/selectDeptTree/" + treeId,
+				url: prefix + "/selectDeptTree/" + treeId + "/0",
 				callBack: doSubmit
 			};
 			$.modal.openOptions(options);
